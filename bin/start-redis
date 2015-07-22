@@ -1,0 +1,78 @@
+#!/usr/bin/python
+
+from jinja2 import Environment, FileSystemLoader
+from subprocess import check_call
+
+import os
+
+def get_configuration():
+	configuration = { }
+	# Get the number of databases.
+	value = os.getenv('REDIS_DB_NUM', 16)
+	configuration.update({ 'n_databases': value })
+	# Get the slave flag.
+	value = os.getenv('REDIS_SLAVE', 'false')
+	configuration.update({ 'is_slave': value.lower() == 'true' })
+	# Get the authenticatin flag.
+	value = os.getenv('REDIS_REQUIRE_AUTH', 'false')
+	configuration.update({ 'require_auth': value.lower() == 'true' })
+	# Get the master name.
+	value = os.getenv('REDIS_MASTER_NAME', 'mymaster')
+	configuration.update({ 'master_name': value })
+	# Get the master IP.
+	value = os.getenv('REDIS_MASTER_IP', '127.0.0.1')
+	configuration.update({ 'master_ip': value })
+	# Get the master port.
+	value = os.getenv('REDIS_MASTER_PORT', 6379)
+	configuration.update({ 'master_port': value })
+	# Get the master password.
+	value = os.getenv('REDIS_MASTER_PASSWORD', 'Sup3rS3cr3tPass0rd')
+	configuration.update({ 'master_password': value })
+	# Get the quorum size.
+	value = os.getenv('REDIS_QUORUM', 2)
+	configuration.update({ 'quorum': value })
+	# Get the sentinel flag.
+	value = os.getenv('SENTINEL_REQUIRED', 'false')
+	configuration.update({ 'sentinel_required': value.lower() == 'true'})
+	# Get the sentinel host IP.
+	value = os.getenv('SENTINEL_HOST_IP', '127.0.0.1')
+	configuration.update({ 'sentinel_host_ip': value })
+	# Get the sentinel host port.
+	value = os.getenv('SENTINEL_HOST_PORT', 26379)
+	configuration.update({ 'sentinel_host_port': value })
+	return configuration
+
+def run(app, *args):
+	check_call([app] + list(args))
+
+def start(service):
+	check_call(['service', service, 'start'])
+
+def write(template, path):
+	with open(path, "wb") as output:
+		output.write(template)
+
+if __name__ == "__main__":
+	# Initialize Jinja2
+	loader = FileSystemLoader('/usr/share/redis')
+	templates = Environment(loader = loader)
+	# Load the configuration into a dictionary.
+	configuration = get_configuration()
+
+	# Write redis.conf
+	redis = templates.get_template('redis.conf.template') \
+										.render(configuration)
+	write(redis, '/etc/redis/redis.conf')
+	# Write sentinel.conf
+	sentinel = templates.get_template('sentinel.conf.template') \
+											.render(configuration)
+	write(sentinel, '/etc/redis/sentinel.conf')
+	# Start the container.
+	start('redis-server')
+	if configuration['sentinel_required']:
+		start('sentinel-server')
+	# Print the log to stdout.
+	try:
+		run('tail', '-F', '/var/log/redis/redis-server.log')
+	except KeyboardInterrupt:
+		print 'Exiting...'
