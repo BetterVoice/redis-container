@@ -16,6 +16,9 @@ RUN mkdir /usr/share/redis
 ADD conf/redis.conf.template /usr/share/redis/redis.conf.template
 ADD conf/sentinel.conf.template /usr/share/redis/sentinel.conf.template
 
+# Update sysctl.conf.
+RUN echo "vm.overcommit_memory=1" >> /etc/sysctl.conf
+
 # Copy and register the sentinel sysv script.
 ADD sysv/sentinel-server /etc/init.d/sentinel-server
 RUN chmod +x /etc/init.d/sentinel-server
