@@ -42,7 +42,7 @@ pidfile /var/run/redis/redis-server.pid
 
 # Accept connections on the specified port, default is 6379.
 # If port 0 is specified Redis will not listen on a TCP socket.
-{% if redis_port is not None %}
+{% if redis_port is defined and not redis_port == None %}
 port {{redis_port}}
 {% else %}
 port 6379
@@ -55,7 +55,7 @@ port 6379
 # will silently truncate it to the value of /proc/sys/net/core/somaxconn so
 # make sure to raise both the value of somaxconn and tcp_max_syn_backlog
 # in order to get the desired effect.
-{% if redis_tcp_backlog is not None %}
+{% if redis_tcp_backlog is defined and not redis_tcp_backlog == None %}
 tcp-backlog {{redis_tcp_backlog}}
 {% else %}
 tcp-backlog 511
@@ -69,7 +69,7 @@ tcp-backlog 511
 # Examples:
 #
 # bind 192.168.1.100 10.0.0.1
-{% if redis_bind is not None %}
+{% if redis_bind is defined and not redis_bind == None %}
 bind {{redis_bind}}
 {% else %}
 bind 127.0.0.1
@@ -99,7 +99,7 @@ timeout 0
 # On other kernels the period depends on the kernel configuration.
 #
 # A reasonable value for this option is 60 seconds.
-{% if redis_tcp_keepalive is not None %}
+{% if redis_tcp_keepalive is defined and not redis_tcp_keepalive == None %}
 tcp-keepalive {{redis_tcp_keepalive}}
 {% else %}
 tcp-keepalive 60
@@ -111,7 +111,7 @@ tcp-keepalive 60
 # verbose (many rarely useful info, but not a mess like the debug level)
 # notice (moderately verbose, what you want in production probably)
 # warning (only very important / critical messages are logged)
-{% if redis_loglevel is not None %}
+{% if redis_loglevel is defined and not redis_loglevel == None %}
 loglevel {{redis_loglevel}}
 {% else %}
 loglevel notice
@@ -135,7 +135,7 @@ logfile /var/log/redis/redis-server.log
 # Set the number of databases. The default database is DB 0, you can select
 # a different one on a per-connection basis using SELECT <dbid> where
 # dbid is a number between 0 and 'databases'-1
-{% if redis_databases is not None %}
+{% if redis_databases is defined and not redis_databases == None %}
 databases {{redis_databases}}
 {% else %}
 databases 16
@@ -166,7 +166,7 @@ databases 16
 #   save 900 1
 #   save 300 10
 #   save 60 10000
-{% if redis_save is not None %}
+{% if redis_save is defined and not redis_save == None %}
 {% for save in redis_save.split(",") %}
 {{save}}
 {% endfor %}
@@ -213,7 +213,7 @@ dbfilename dump.rdb
 # The Append Only File will also be created inside this directory.
 #
 # Note that you must specify a directory here, not a file name.
-{% if redis_working_dir is not None %}
+{% if redis_working_dir is defined and not redis_working_dir == None %}
 dir {{redis_working_dir}}
 {% else %}
 dir /var/lib/redis
@@ -236,9 +236,9 @@ dir /var/lib/redis
 #    and resynchronize with them.
 #
 # slaveof <masterip> <masterport>
-{% if (redis_sentinel_enabled is not None and
-       redis_master_address is not None and
-       redis_master_port is not None
+{% if (redis_sentinel_enabled is defined and not redis_sentinel_enabled == None and
+       redis_master_address is defined and not redis_master_address == None and
+       redis_master_port is defined and not redis_master_port == None and
        not redis_sentinel_enabled == False) %}
 slaveof {{redis_master_address}} {{redis_master_port}}
 {% endif %}
@@ -249,7 +249,7 @@ slaveof {{redis_master_address}} {{redis_master_port}}
 # refuse the slave request.
 #
 # masterauth <master-password>
-{% if redis_master_password is not None %}
+{% if redis_master_password is defined and not redis_master_password == None %}
 masterauth {{redis_master_password}}
 {% endif %}
 
@@ -264,7 +264,7 @@ masterauth {{redis_master_password}}
 #    an error "SYNC with master in progress" to all the kind of commands
 #    but to INFO and SLAVEOF.
 #
-{% if redis_slave_serve_stale_data is not None %}
+{% if redis_slave_serve_stale_date is defined and not redis_slave_serve_stale_data == None %}
 slave-serve-stale-data {{redis_slave_serve_stale_data}}
 {% else %}
 slave-serve-stale-data yes
@@ -334,7 +334,7 @@ repl-diskless-sync-delay 5
 # seconds.
 #
 # repl-ping-slave-period 10
-{% if redis_repl_ping_slave_period is not None %}
+{% if redis_repl_ping_slave_period is defined and not redis_repl_ping_slave_period == None %}
 repl-ping-slave-period {{redis_repl_ping_slave_period}}
 {% endif %}
 
@@ -350,7 +350,7 @@ repl-ping-slave-period {{redis_repl_ping_slave_period}}
 # every time there is low traffic between the master and the slave.
 #
 # repl-timeout 60
-{% if redis_repl_timeout is not None %}
+{% if redis_repl_timeout is defined and not redis_repl_timeout == None %}
 repl-timeout {{redis_repl_timeout}}
 {% endif %}
 
@@ -367,7 +367,7 @@ repl-timeout {{redis_repl_timeout}}
 # By default we optimize for low latency, but in very high traffic conditions
 # or when the master and slaves are many hops away, turning this to "yes" may
 # be a good idea.
-{% if redis_repl_disable_tcp_nodelay is not None %}
+{% if redis_repl_disable_tcp_nodelay is defined and not redis_repl_disable_tcp_nodelay == None %}
 repl-disable-tcp-nodelay {{redis_repl_disable_tcp_nodelay}}
 {% else %}
 repl-disable-tcp-nodelay no
@@ -385,7 +385,7 @@ repl-disable-tcp-nodelay no
 # The backlog is only allocated once there is at least a slave connected.
 #
 # repl-backlog-size 1mb
-{% if redis_repl_backlog_size is not None %}
+{% if redis_repl_backlog_size is defined and not redis_repl_backlog_size == None %}
 repl-backlog-size {{redis_repl_backlog_size}}
 {% endif %}
 
@@ -397,7 +397,7 @@ repl-backlog-size {{redis_repl_backlog_size}}
 # A value of 0 means to never release the backlog.
 #
 # repl-backlog-ttl 3600
-{% if redis_repl_backlog_ttl is not None %}
+{% if redis_repl_backlog_ttl is defined and not redis_repl_backlog_ttl == None %}
 repl-backlog-ttl {{redis_repl_backlog_ttl}}
 {% endif %}
 
@@ -414,7 +414,7 @@ repl-backlog-ttl {{redis_repl_backlog_ttl}}
 # Redis Sentinel for promotion.
 #
 # By default the priority is 100.
-{% if redis_slave_priority is not None %}
+{% if redis_slave_priority is defined and not redis_slave_priority == None %}
 slave-priority {{redis_slave_priority}}
 {% else %}
 slave-priority 100
@@ -441,10 +441,10 @@ slave-priority 100
 #
 # By default min-slaves-to-write is set to 0 (feature disabled) and
 # min-slaves-max-lag is set to 10.
-{% if redis_min_slaves_to_write is not None %}
+{% if redis_min_slaves_to_write is defined and not redis_min_slaves_to_write == None %}
 min-slaves-to-write {{redis_min_slaves_to_write}}
 {% endif %}
-{% if redis_min_slaves_max_lag is not None %}
+{% if redis_min_slaves_max_lag is defined and not redis_min_slaves_max_lag == None %}
 min-slaves-max-lag {{redis_min_slaves_max_lag}}
 {% endif %}
 
@@ -462,7 +462,7 @@ min-slaves-max-lag {{redis_min_slaves_max_lag}}
 # use a very strong password otherwise it will be very easy to break.
 #
 # requirepass foobared
-{% if redis_master_password is not None %}
+{% if redis_master_password is defined and not redis_master_password == None %}
 requirepass {{redis_master_password}}
 {% endif %}
 
@@ -497,7 +497,7 @@ requirepass {{redis_master_password}}
 # an error 'max number of clients reached'.
 #
 # maxclients 10000
-{% if redis_maxclients is not None %}
+{% if redis_maxclients is defined and not redis_maxclients == None %}
 maxclients {{redis_maxclients}}
 {% endif %}
 
@@ -525,7 +525,7 @@ maxclients {{redis_maxclients}}
 # output buffers (but this is not needed if the policy is 'noeviction').
 #
 # maxmemory <bytes>
-{% if redis_maxmemory is not None %}
+{% if redis_maxmemory is defined and not redis_maxmemory == None %}
 maxmemory {{redis_maxmemory}}
 {% endif %}
 
@@ -551,7 +551,7 @@ maxmemory {{redis_maxmemory}}
 # The default is:
 #
 # maxmemory-policy volatile-lru
-{% if redis_maxmemory_policy is not None %}
+{% if redis_maxmemory_policy is defined and not redis_maxmemory_policy == None %}
 maxmemory-policy {{redis_maxmemory_policy}}
 {% endif %}
 
@@ -562,7 +562,7 @@ maxmemory-policy {{redis_maxmemory_policy}}
 # using the following configuration directive.
 #
 # maxmemory-samples 3
-{% if redis_maxmemory_samples is not None %}
+{% if redis_maxmemory_samples is defined and not redis_maxmemory_samples == None %}
 maxmemory-samples {{redis_maxmemory_samples}}
 {% endif %}
 

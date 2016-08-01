@@ -2,7 +2,7 @@
 
 # port <sentinel-port>
 # The port that this sentinel instance will run on
-{% if redis_sentinel_port is not None %}
+{% if redis_sentinel_port is defined and not redis_sentinel_port == None %}
 port {{redis_sentinel_port}}
 {% else %}
 port 26379
@@ -29,11 +29,11 @@ port 26379
 # Example:
 #
 # sentinel announce-ip 1.2.3.4
-{% if redis_sentinel_announce_ip is not None %}
+{% if redis_sentinel_announce_ip is defined and not redis_sentinel_announce_ip == None %}
 sentinel announce-ip {{redis_sentinel_announce_ip}}
 {% endif %}
 
-{% if redis_sentinel_announce_port is not None %}
+{% if redis_sentinel_announce_port is defined and not redis_sentinel_announce_port == None %}
 sentinel announce-port {{redis_sentinel_announce_port}}
 {% endif %}
 
@@ -42,7 +42,7 @@ sentinel announce-port {{redis_sentinel_announce_port}}
 # For Redis Sentinel to chdir to /tmp at startup is the simplest thing
 # for the process to don't interfere with administrative tasks such as
 # unmounting filesystems.
-{% if redis_sentinel_working_dir is not None %}
+{% if redis_sentinel_working_dir is defined and not redis_sentinel_working_dir == None %}
 dir {{redis_sentinel_working_dir}}
 {% else %}
 dir /tmp
@@ -65,9 +65,9 @@ dir /tmp
 #
 # Note: master name should not include special characters or spaces.
 # The valid charset is A-z 0-9 and the three characters ".-_".
-{% if (redis_master_address is not None and
-       redis_master_port is not None and 
-       redis_sentinel_quorum is not None) %}
+{% if (redis_master_address is defined and not redis_master_address == None and
+       redis_master_port is defined and not redis_master_port == None and 
+       redis_sentinel_quorum is defined and not redis_sentinel_quorum == None) %}
 sentinel monitor mymaster {{redis_master_address}} {{redis_master_port}} {{redis_sentinel_quorum}}
 {% else %}
 sentinel monitor mymaster 127.0.0.1 6379 2
@@ -91,8 +91,8 @@ sentinel monitor mymaster 127.0.0.1 6379 2
 # Example:
 #
 # sentinel auth-pass mymaster MySUPER--secret-0123passw0rd
-{% if (redis_master_password is not None and
-       redis_master_name is not None) %}
+{% if (redis_master_password is defined and not redis_master_password == None and
+       redis_master_name is defined and not redis_master_name == None) %}
 sentinel auth-pass {{redis_master_name}} {{redis_master_password}}
 {% endif %}
 
@@ -104,8 +104,8 @@ sentinel auth-pass {{redis_master_name}} {{redis_master_password}}
 # Down).
 #
 # Default is 30 seconds.
-{% if redis_master_name is not None %}
-{% if redis_down_after_millis is not None %}
+{% if redis_master_name is defined and not redis_master_name == None %}
+{% if redis_down_after_millis is defined and not redis_down_after_millis == None %}
 sentinel down-after-milliseconds {{redis_master_name}} {{redis_down_after_millis}}
 {% else %}
 sentinel down-after-milliseconds {{redis_master_name}} 30000
@@ -120,7 +120,7 @@ sentinel down-after-milliseconds mymaster 30000
 # during the failover. Use a low number if you use the slaves to serve query
 # to avoid that all the slaves will be unreachable at about the same
 # time while performing the synchronization with the master.
-{% if redis_master_name is not None %}
+{% if redis_master_name is defined and not redis_master_name == None %}
 sentinel parallel-syncs {{redis_master_name}} 1
 {% else %}
 sentinel parallel-syncs mymaster 1
@@ -149,8 +149,8 @@ sentinel parallel-syncs mymaster 1
 #   the exact parallel-syncs progression as specified.
 #
 # Default is 3 minutes.
-{% if redis_master_name is not None %}
-{% if redis_failover_timeout is not None %}
+{% if redis_master_name is defined and not redis_master_name == None %}
+{% if redis_failover_timeout is defined and not redis_failover_timeout == None %}
 sentinel failover-timeout {{redis_master_name}} {{redis_failover_timeout}}
 {% else %}
 sentinel failover-timeout {{redis_master_name}} 180000
