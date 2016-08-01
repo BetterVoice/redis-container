@@ -61,12 +61,14 @@ CMD /bin/bash -c " \
       trt -s /usr/share/redis/3.2.2/redis.conf.template \
           -d /etc/redis/redis.conf \
           -ps environment; \
+      chown redis:redis /etc/redis/redis.conf; \
       if [ ! -z ${REDIS_SENTINEL_ENABLED+x} ];then \
         REDIS_SENTINEL_ENABLED=`echo $REDIS_SENTINEL_ENABLED | awk '{print tolower($0)}'`; \
         if [ $REDIS_SENTINEL_ENABLED=true ];then \
           trt -s /usr/share/redis/3.2.2/sentinel.conf.template \
               -d /etc/redis/sentinel.conf \
               -ps environment; \
+          chown redis:redis /etc/redis/sentinel.conf; \
         fi; \
       fi; \
     fi; \
