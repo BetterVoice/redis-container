@@ -1,0 +1,6 @@
+/var/log/redis/redis-server.log {
+  monthly
+  missingok
+  notifempty
+  create 0755 redis redis 
+}

@@ -3,6 +3,8 @@
 # Provides:		sentinel-server
 # Default-Start:	2 3 4 5
 # Default-Stop:		0 1 6
+# Required-Start:
+# Required-Stop:
 # Short-Description:	sentinel-server - Redis monitor
 # Description:		sentinel-server - Redis monitor
 ### END INIT INFO

@@ -2,7 +2,51 @@
 
 # port <sentinel-port>
 # The port that this sentinel instance will run on
+{% if redis_sentinel_port is not None %}
+port {{redis_sentinel_port}}
+{% else %}
 port 26379
+{% endif %}
+
+# sentinel announce-ip <ip>
+# sentinel announce-port <port>
+#
+# The above two configuration directives are useful in environments where,
+# because of NAT, Sentinel is reachable from outside via a non-local address.
+#
+# When announce-ip is provided, the Sentinel will claim the specified IP address
+# in HELLO messages used to gossip its presence, instead of auto-detecting the
+# local address as it usually does.
+#
+# Similarly when announce-port is provided and is valid and non-zero, Sentinel
+# will announce the specified TCP port.
+#
+# The two options don't need to be used together, if only announce-ip is
+# provided, the Sentinel will announce the specified IP and the server port
+# as specified by the "port" option. If only announce-port is provided, the
+# Sentinel will announce the auto-detected local IP and the specified port.
+#
+# Example:
+#
+# sentinel announce-ip 1.2.3.4
+{% if redis_sentinel_announce_ip is not None %}
+sentinel announce-ip {{redis_sentinel_announce_ip}}
+{% endif %}
+
+{% if redis_sentinel_announce_port is not None %}
+sentinel announce-port {{redis_sentinel_announce_port}}
+{% endif %}
+
+# dir <working-directory>
+# Every long running process should have a well-defined working directory.
+# For Redis Sentinel to chdir to /tmp at startup is the simplest thing
+# for the process to don't interfere with administrative tasks such as
+# unmounting filesystems.
+{% if redis_sentinel_working_dir is not None %}
+dir {{redis_sentinel_working_dir}}
+{% else %}
+dir /tmp
+{% endif %}
 
 # sentinel monitor <master-name> <ip> <redis-port> <quorum>
 #
@@ -13,10 +57,21 @@ port 26379
 # be elected by the majority of the known Sentinels in order to
 # start a failover, so no failover can be performed in minority.
 #
+# Slaves are auto-discovered, so you don't need to specify slaves in
+# any way. Sentinel itself will rewrite this configuration file adding
+# the slaves using additional configuration options.
+# Also note that the configuration file is rewritten when a
+# slave is promoted to master.
+#
 # Note: master name should not include special characters or spaces.
 # The valid charset is A-z 0-9 and the three characters ".-_".
-#sentinel monitor mymaster 127.0.0.1 6379 2
-{% if sentinel_required %}sentinel monitor {{master_name}} {{master_ip}} {{master_port}} {{quorum}}{% endif %}
+{% if (redis_master_address is not None and
+       redis_master_port is not None and 
+       redis_sentinel_quorum is not None) %}
+sentinel monitor mymaster {{redis_master_address}} {{redis_master_port}} {{redis_sentinel_quorum}}
+{% else %}
+sentinel monitor mymaster 127.0.0.1 6379 2
+{% endif %}
 
 # sentinel auth-pass <master-name> <password>
 #
@@ -36,7 +91,10 @@ port 26379
 # Example:
 #
 # sentinel auth-pass mymaster MySUPER--secret-0123passw0rd
-{% if sentinel_required and require_auth %}sentinel auth-pass {{master_name}} {{master_password}}{% endif %}
+{% if (redis_master_password is not None and
+       redis_master_name is not None) %}
+sentinel auth-pass {{redis_master_name}} {{redis_master_password}}
+{% endif %}
 
 # sentinel down-after-milliseconds <master-name> <milliseconds>
 #
@@ -46,8 +104,15 @@ port 26379
 # Down).
 #
 # Default is 30 seconds.
-#sentinel down-after-milliseconds mymaster 30000
-sentinel down-after-milliseconds {{master_name}} 5000
+{% if redis_master_name is not None %}
+{% if redis_down_after_millis is not None %}
+sentinel down-after-milliseconds {{redis_master_name}} {{redis_down_after_millis}}
+{% else %}
+sentinel down-after-milliseconds {{redis_master_name}} 30000
+{% endif %}
+{% else %}
+sentinel down-after-milliseconds mymaster 30000
+{% endif %}
 
 # sentinel parallel-syncs <master-name> <numslaves>
 #
@@ -55,8 +120,11 @@ sentinel down-after-milliseconds {{master_name}} 5000
 # during the failover. Use a low number if you use the slaves to serve query
 # to avoid that all the slaves will be unreachable at about the same
 # time while performing the synchronization with the master.
-#sentinel parallel-syncs mymaster 1
-sentinel parallel-syncs {{master_name}} 1
+{% if redis_master_name is not None %}
+sentinel parallel-syncs {{redis_master_name}} 1
+{% else %}
+sentinel parallel-syncs mymaster 1
+{% endif %}
 
 # sentinel failover-timeout <master-name> <milliseconds>
 #
@@ -81,8 +149,15 @@ sentinel parallel-syncs {{master_name}} 1
 #   the exact parallel-syncs progression as specified.
 #
 # Default is 3 minutes.
-#sentinel failover-timeout mymaster 180000
-sentinel failover-timeout {{master_name}} 30000
+{% if redis_master_name is not None %}
+{% if redis_failover_timeout is not None %}
+sentinel failover-timeout {{redis_master_name}} {{redis_failover_timeout}}
+{% else %}
+sentinel failover-timeout {{redis_master_name}} 180000
+{% endif %}
+{% else %}
+sentinel failover-timeout mymaster 180000
+{% endif %}
 
 # SCRIPTS EXECUTION
 #
@@ -91,10 +166,10 @@ sentinel failover-timeout {{master_name}} 30000
 # or to reconfigure clients after a failover. The scripts are executed
 # with the following rules for error handling:
 #
-# If script exists with "1" the execution is retried later (up to a maximum
+# If script exits with "1" the execution is retried later (up to a maximum
 # number of times currently set to 10).
 #
-# If script exists with "2" (or an higher value) the script execution is
+# If script exits with "2" (or an higher value) the script execution is
 # not retried.
 #
 # If script terminates because it receives a signal the behavior is the same
@@ -148,7 +223,4 @@ sentinel failover-timeout {{master_name}} 30000
 #
 # sentinel client-reconfig-script mymaster /var/redis/reconfig.sh
 
-# DOCKER CONFIG
-sentinel announce-ip {{sentinel_host_ip}}
-sentinel announce-port {{sentinel_host_port}}
 
